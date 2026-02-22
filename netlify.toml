@@ -1,0 +1,16 @@
+# Configuração para deploy no Netlify
+# https://docs.netlify.com/configure-builds/file-based-configuration/
+
+[build]
+  command   = "npm run build"
+  publish   = "dist"
+  functions = null
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA: todas as rotas redirecionam para index.html (útil se adicionar React Router depois)
+[[redirects]]
+  from    = "/*"
+  to      = "/index.html"
+  status  = 200

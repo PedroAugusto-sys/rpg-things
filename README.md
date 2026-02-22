@@ -36,3 +36,4 @@ meu-acervo-rpg/
 ## Dados
 
 Personagens ficam em `src/data/characters.js`. Edite esse arquivo para alterar ou incluir personagens.
+
