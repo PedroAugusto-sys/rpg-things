@@ -1,4 +1,4 @@
-import characters from '../../characters'
+import characters from './data/characters'
 import CharacterShowcase from './components/CharacterShowcase'
 import './App.css'
 

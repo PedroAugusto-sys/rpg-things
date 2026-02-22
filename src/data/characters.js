@@ -1,5 +1,5 @@
 /**
- * Array de personagens de exemplo (D&D)
+ * Array de personagens (D&D / RPG)
  * Cada personagem possui: id, nome, classe(s), nível, corTema, bio e caminhos de imagens
  */
 const characters = [
