@@ -1,8 +1,10 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 const SAND_COUNT = 140
+const SAND_COUNT_MOBILE = 45
 const GLYPH_CHANCE = 0.07
 const BURST_COUNT = 90
+const BURST_COUNT_MOBILE = 35
 const BURST_GLYPH_CHANCE = 0.08
 const BURST_LIFESPAN_MIN = 2
 const BURST_LIFESPAN_MAX = 3
@@ -99,6 +101,17 @@ function drawGlyph(ctx, x, y, size, rotation, alpha) {
   ctx.restore()
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)')
+    const fn = () => setIsMobile(mql.matches)
+    mql.addEventListener('change', fn)
+    return () => mql.removeEventListener('change', fn)
+  }, [])
+  return isMobile
+}
+
 export default function KairosSandCanvas({ active = false, trigger = 0, className = '' }) {
   const canvasRef = useRef(null)
   const particlesRef = useRef([])
@@ -106,6 +119,9 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
   const dimensionsRef = useRef({ w: 0, h: 0 })
   const timeRef = useRef(0)
   const lastTriggerRef = useRef(0)
+  const isMobile = useIsMobile()
+  const sandCount = isMobile ? SAND_COUNT_MOBILE : SAND_COUNT
+  const burstCount = isMobile ? BURST_COUNT_MOBILE : BURST_COUNT
 
   useEffect(() => {
     if (active && trigger > 0 && trigger !== lastTriggerRef.current) {
@@ -115,12 +131,12 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
       const cx = w / 2
       const cy = h / 2
       if (w && h) {
-        for (let i = 0; i < BURST_COUNT; i++) {
+        for (let i = 0; i < burstCount; i++) {
           particlesRef.current.push(createBurstParticle(w, h, cx, cy))
         }
       }
     }
-  }, [active, trigger])
+  }, [active, trigger, burstCount])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -131,7 +147,8 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
     function setSize() {
       const w = window.innerWidth
       const h = window.innerHeight
-      const dpr = window.devicePixelRatio || 1
+      const mobile = w < 768
+      const dpr = mobile ? Math.min(2, window.devicePixelRatio || 1) : (window.devicePixelRatio || 1)
       canvas.width = w * dpr
       canvas.height = h * dpr
       canvas.style.width = `${w}px`
@@ -139,8 +156,8 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       dimensionsRef.current = { w: window.innerWidth, h: window.innerHeight }
       const { w: cw, h: ch } = dimensionsRef.current
-      if (particlesRef.current.length === 0) {
-        particlesRef.current = initParticles(cw, ch)
+      if (particlesRef.current.length !== sandCount) {
+        particlesRef.current = initParticles(cw, ch, sandCount)
       } else {
         particlesRef.current = particlesRef.current.map((p) => ({
           ...p,
@@ -150,12 +167,21 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
       }
     }
 
-    function loop() {
+    let lastFrame = 0
+    const mobileFpsInterval = 1000 / 30
+
+    function loop(now = 0) {
       const { w, h } = dimensionsRef.current
       if (!w || !h) {
-        animationRef.current = requestAnimationFrame(loop)
+        animationRef.current = requestAnimationFrame(loopWithTime)
         return
       }
+      const mobile = w < 768
+      if (mobile && now - lastFrame < mobileFpsInterval) {
+        animationRef.current = requestAnimationFrame(loopWithTime)
+        return
+      }
+      lastFrame = now
 
       ctx.clearRect(0, 0, w, h)
       timeRef.current += 1
@@ -188,10 +214,11 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
         return true
       })
 
+      const mobile = dimensionsRef.current.w < 768
       particlesRef.current
         .sort((a, b) => a.depth - b.depth)
         .forEach((p) => {
-          const useBlur = p.depth > BLUR_DEPTH_THRESHOLD
+          const useBlur = !mobile && p.depth > BLUR_DEPTH_THRESHOLD
           if (useBlur) ctx.filter = 'blur(1.5px)'
           else ctx.filter = 'none'
 
@@ -212,17 +239,19 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
           ctx.filter = 'none'
         })
 
-      animationRef.current = requestAnimationFrame(loop)
+      animationRef.current = requestAnimationFrame(loopWithTime)
     }
+
+    const loopWithTime = (t) => loop(t)
 
     setSize()
     window.addEventListener('resize', setSize)
-    animationRef.current = requestAnimationFrame(loop)
+    animationRef.current = requestAnimationFrame(loopWithTime)
     return () => {
       window.removeEventListener('resize', setSize)
       if (animationRef.current) cancelAnimationFrame(animationRef.current)
     }
-  }, [active])
+  }, [active, sandCount])
 
   if (!active) return null
 

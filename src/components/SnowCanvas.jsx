@@ -1,7 +1,9 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 const FLAKE_COUNT = 180
+const FLAKE_COUNT_MOBILE = 50
 const FLAKE_COUNT_FOREGROUND = 48
+const FLAKE_COUNT_FOREGROUND_MOBILE = 16
 const FOREGROUND_OPACITY = 0.32
 const MIN_SIZE = 1
 const MAX_SIZE = 4
@@ -13,6 +15,7 @@ const OPACITY_MIN = 0.25
 const OPACITY_MAX = 0.9
 
 const BURST_FLAKE_COUNT = 55
+const BURST_FLAKE_COUNT_MOBILE = 25
 
 function createFlake(width, height, existingFlakes = [], burst = false) {
   const size = MIN_SIZE + Math.random() * (MAX_SIZE - MIN_SIZE)
@@ -38,13 +41,28 @@ function initFlakes(width, height, count = FLAKE_COUNT) {
   return flakes
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768)
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)')
+    const fn = () => setIsMobile(mql.matches)
+    mql.addEventListener('change', fn)
+    return () => mql.removeEventListener('change', fn)
+  }, [])
+  return isMobile
+}
+
 export default function SnowCanvas({ active = true, foreground = false, trigger = 0, className = '' }) {
   const canvasRef = useRef(null)
   const flakesRef = useRef([])
   const animationRef = useRef(null)
   const dimensionsRef = useRef({ w: 0, h: 0 })
   const lastTriggerRef = useRef(0)
-  const flakeCount = foreground ? FLAKE_COUNT_FOREGROUND : FLAKE_COUNT
+  const isMobile = useIsMobile()
+  const flakeCount = foreground
+    ? (isMobile ? FLAKE_COUNT_FOREGROUND_MOBILE : FLAKE_COUNT_FOREGROUND)
+    : (isMobile ? FLAKE_COUNT_MOBILE : FLAKE_COUNT)
+  const burstCount = isMobile ? BURST_FLAKE_COUNT_MOBILE : BURST_FLAKE_COUNT
 
   useEffect(() => {
     if (!active || trigger <= 0 || trigger === lastTriggerRef.current) return
@@ -53,14 +71,14 @@ export default function SnowCanvas({ active = true, foreground = false, trigger 
       const w = dimensionsRef.current.w || window.innerWidth
       const h = dimensionsRef.current.h || window.innerHeight
       if (w && h) {
-        for (let i = 0; i < BURST_FLAKE_COUNT; i++) {
+        for (let i = 0; i < burstCount; i++) {
           flakesRef.current.push(createFlake(w, h, [], true))
         }
       }
     }
     const id = requestAnimationFrame(() => requestAnimationFrame(addBurst))
     return () => cancelAnimationFrame(id)
-  }, [active, trigger])
+  }, [active, trigger, burstCount])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -68,11 +86,14 @@ export default function SnowCanvas({ active = true, foreground = false, trigger 
 
     const ctx = canvas.getContext('2d')
     let time = 0
+    let lastFrame = 0
+    const mobileFpsInterval = 1000 / 30
 
     function setSize() {
       const w = window.innerWidth
       const h = window.innerHeight
-      const dpr = window.devicePixelRatio || 1
+      const mobile = w < 768
+      const dpr = mobile ? Math.min(2, window.devicePixelRatio || 1) : (window.devicePixelRatio || 1)
 
       canvas.width = w * dpr
       canvas.height = h * dpr
@@ -83,7 +104,7 @@ export default function SnowCanvas({ active = true, foreground = false, trigger 
       dimensionsRef.current = { w: window.innerWidth, h: window.innerHeight }
 
       const { w: cw, h: ch } = dimensionsRef.current
-      if (flakesRef.current.length === 0) {
+      if (flakesRef.current.length !== flakeCount) {
         flakesRef.current = initFlakes(cw, ch, flakeCount)
       } else {
         flakesRef.current = flakesRef.current.map((f) => ({
@@ -94,12 +115,18 @@ export default function SnowCanvas({ active = true, foreground = false, trigger 
       }
     }
 
-    function loop() {
+    function loop(now = 0) {
       const { w, h } = dimensionsRef.current
       if (!w || !h) {
-        animationRef.current = requestAnimationFrame(loop)
+        animationRef.current = requestAnimationFrame(loopWithTime)
         return
       }
+      const mobile = w < 768
+      if (mobile && now - lastFrame < mobileFpsInterval) {
+        animationRef.current = requestAnimationFrame(loopWithTime)
+        return
+      }
+      lastFrame = now
 
       ctx.clearRect(0, 0, w, h)
       time += 1
@@ -128,8 +155,10 @@ export default function SnowCanvas({ active = true, foreground = false, trigger 
         ctx.fill()
       })
 
-      animationRef.current = requestAnimationFrame(loop)
+      animationRef.current = requestAnimationFrame(loopWithTime)
     }
+
+    const loopWithTime = (now) => loop(now)
 
     const handleResize = () => {
       setSize()
@@ -137,7 +166,7 @@ export default function SnowCanvas({ active = true, foreground = false, trigger 
 
     setSize()
     window.addEventListener('resize', handleResize)
-    animationRef.current = requestAnimationFrame(loop)
+    animationRef.current = requestAnimationFrame(loopWithTime)
 
     return () => {
       window.removeEventListener('resize', handleResize)

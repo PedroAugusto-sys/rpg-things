@@ -121,7 +121,7 @@ export default function CharacterShowcase({ characters }) {
       {/* Areia do Tempo: partículas contínuas + burst no flip do retrato */}
       <KairosSandCanvas active={isKairos} trigger={sandTrigger} />
 
-      <div className="relative z-10 flex-1 p-8 md:p-10">
+      <div className="relative z-10 flex-1 px-4 py-4 sm:px-6 sm:py-6 md:p-8 lg:p-10">
         <AnimatePresence mode="wait">
           {selected && (
             <motion.h1
@@ -130,7 +130,7 @@ export default function CharacterShowcase({ characters }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="title-cronicas text-center text-3xl md:text-5xl uppercase mb-12"
+              className="title-cronicas text-center text-2xl sm:text-3xl md:text-5xl uppercase mb-6 sm:mb-8 md:mb-12"
               style={{
                 fontFamily: "'Cinzel', serif",
                 fontWeight: 700,
@@ -138,7 +138,7 @@ export default function CharacterShowcase({ characters }) {
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 color: 'transparent',
-                letterSpacing: '0.28em',
+                letterSpacing: 'clamp(0.05em, 2vw, 0.28em)',
                 filter: 'drop-shadow(0 0 20px var(--kov-glow)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
               }}
             >
@@ -148,7 +148,7 @@ export default function CharacterShowcase({ characters }) {
         </AnimatePresence>
 
         {/* Carrossel centralizado: card focado maior + glow */}
-        <div className={`flex justify-center gap-4 md:gap-8 mb-16 md:mb-20 overflow-x-auto overflow-y-visible py-8 px-4 ${selected ? 'mt-16 items-center pt-12' : 'items-end'}`}>
+        <div className={`flex justify-center gap-3 sm:gap-4 md:gap-8 mb-8 sm:mb-12 md:mb-16 lg:mb-20 overflow-x-auto overflow-y-visible py-4 sm:py-6 md:py-8 px-2 sm:px-4 ${selected ? 'mt-8 sm:mt-12 md:mt-16 items-center pt-6 sm:pt-8 md:pt-12' : 'items-end'}`} style={{ WebkitOverflowScrolling: 'touch' }}>
           {characters.map((char, index) => {
             const isSelected = selected?.id === char.id
             const isHovered = hoveredCardId === char.id
@@ -317,13 +317,13 @@ export default function CharacterShowcase({ characters }) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.06, duration: WHOOSH_DURATION * 0.9 }}
-                className="rounded-xl kov-frame p-6 md:p-8"
+                className="rounded-xl kov-frame p-4 sm:p-6 md:p-8"
               >
-                <div className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr] gap-8 md:gap-10">
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr] gap-4 sm:gap-6 md:gap-8 lg:gap-10">
                   {/* Coluna Sobre */}
                   <div>
                     {/* Atributos, Classe, Antecedente e Perícias */}
-                    <div className="mb-6 p-4 rounded-lg bg-[var(--kov-bg)] border border-[var(--kov-border)]">
+                    <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg bg-[var(--kov-bg)] border border-[var(--kov-border)]">
                       {selected.stats && (
                         <>
                           <div className="flex items-baseline gap-2 mb-3">
@@ -514,7 +514,7 @@ export default function CharacterShowcase({ characters }) {
                   </div>
 
                   {/* Coluna imagem / concept art (sticky: segue o scroll até o fim da seção) */}
-                  <div className="min-h-0 flex items-center sticky top-40 self-start">
+                  <div className="min-h-0 flex items-center sticky top-24 sm:top-32 md:top-40 self-start">
                     <div className={`w-full ${conceptImages.length === 1 ? 'max-w-2xl mx-auto' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}`}>
                       {conceptImages.length > 0 ? (
                         conceptImages.map((src, i) => (
@@ -530,7 +530,7 @@ export default function CharacterShowcase({ characters }) {
                             }}
                           >
                             <motion.div
-                              className={`rounded-xl overflow-hidden kov-frame ${conceptImages.length === 1 ? 'aspect-[3/4] max-h-[520px] w-full flex items-center justify-center' : ''}`}
+                              className={`rounded-xl overflow-hidden kov-frame ${conceptImages.length === 1 ? 'aspect-[3/4] max-h-[min(55vh,400px)] sm:max-h-[min(60vh,480px)] md:max-h-[520px] w-full flex items-center justify-center' : ''}`}
                               style={{
                                 backgroundColor: 'var(--kov-bg-panel)',
                                 transformStyle: 'preserve-3d',
@@ -553,7 +553,7 @@ export default function CharacterShowcase({ characters }) {
                               <motion.img
                                 src={src}
                                 alt={`Concept art ${i + 1} - ${selected.nome}`}
-                                className={`rounded-xl border border-white/20 w-full object-contain ${conceptImages.length === 1 ? 'aspect-[3/4] max-h-[520px]' : 'object-cover aspect-video'} ${portraitGlowOn ? '' : 'shadow-2xl'}`}
+                                className={`rounded-xl border border-white/20 w-full object-contain ${conceptImages.length === 1 ? 'aspect-[3/4] max-h-[min(55vh,400px)] sm:max-h-[min(60vh,480px)] md:max-h-[520px]' : 'object-cover aspect-video'} ${portraitGlowOn ? '' : 'shadow-2xl'}`}
                                 style={{
                                   transform: 'translateZ(0)',
                                   backgroundColor: `color-mix(in srgb, ${portraitGlowColor} 18%, #0c0b0a)`,
@@ -584,14 +584,15 @@ export default function CharacterShowcase({ characters }) {
 
       {/* Footer */}
       <footer
-        className="mt-auto py-4 px-4 md:px-6 text-sm border-t-2 flex flex-row items-center justify-between gap-4"
+        className="mt-auto py-3 px-3 sm:py-4 sm:px-4 md:px-6 text-xs sm:text-sm border-t-2 flex flex-row items-center justify-between gap-2 sm:gap-4"
         style={{
           backgroundColor: 'var(--kov-bg)',
           borderColor: 'var(--kov-border)',
           color: 'var(--kov-text-muted)',
+          paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
         }}
       >
-        <span className="flex-1 text-center">Acervo RPG — Biblioteca de Personagens</span>
+        <span className="flex-1 min-w-0 text-center">Acervo RPG — Biblioteca de Personagens</span>
         <div className="relative shrink-0 flex items-center justify-end">
           {discordCopied && (
             <span className="absolute right-0 bottom-full mb-1 text-xs text-[var(--kov-gold)] whitespace-nowrap">

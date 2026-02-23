@@ -9,7 +9,7 @@ import Button from './Button'
 export default function SiteIntroBanner({ onEnter }) {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 sm:p-6"
       style={{ backgroundColor: 'var(--kov-bg)' }}
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -19,7 +19,7 @@ export default function SiteIntroBanner({ onEnter }) {
       <div className="kov-intro-particles absolute inset-0 overflow-hidden pointer-events-none" aria-hidden />
 
       {/* Moldura com Border.svg */}
-      <div className="kov-intro-frame kov-border-svg relative w-full max-w-xl mx-auto flex flex-col items-center justify-center py-8 px-8 md:py-10 md:px-10">
+      <div className="kov-intro-frame kov-border-svg relative w-full max-w-xl mx-auto flex flex-col items-center justify-center py-6 px-5 sm:py-8 sm:px-8 md:py-10 md:px-10">
         {/* Logo */}
         <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center mb-4">
           <img
@@ -31,7 +31,7 @@ export default function SiteIntroBanner({ onEnter }) {
 
         {/* Título principal */}
         <motion.h1
-          className="text-3xl md:text-5xl font-serif font-bold text-center uppercase tracking-wider mb-2"
+          className="text-2xl sm:text-3xl md:text-5xl font-serif font-bold text-center uppercase tracking-wider mb-2"
           style={{
             fontFamily: "'Cinzel', serif",
             background: 'linear-gradient(180deg, #f5e6c8 0%, var(--kov-gold) 40%, #8b6914 100%)',
@@ -49,7 +49,7 @@ export default function SiteIntroBanner({ onEnter }) {
 
         {/* Subtítulo */}
         <motion.p
-          className="text-base md:text-lg text-center mb-6"
+          className="text-sm sm:text-base md:text-lg text-center mb-4 sm:mb-6"
           style={{ color: 'var(--kov-text-muted)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
