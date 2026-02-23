@@ -214,7 +214,6 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
         return true
       })
 
-      const mobile = dimensionsRef.current.w < 768
       particlesRef.current
         .sort((a, b) => a.depth - b.depth)
         .forEach((p) => {
