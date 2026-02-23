@@ -19,7 +19,7 @@ export default function SiteIntroBanner({ onEnter }) {
       <div className="kov-intro-particles absolute inset-0 overflow-hidden pointer-events-none" aria-hidden />
 
       {/* Moldura com Border.svg */}
-      <div className="kov-intro-frame kov-border-svg relative w-full max-w-xl mx-auto flex flex-col items-center justify-center py-5 px-4 sm:py-8 sm:px-8 md:py-10 md:px-10 max-[480px]:max-w-[calc(100vw-1.5rem)]">
+      <div className="kov-intro-frame kov-border-svg relative w-full max-w-xl mx-auto flex flex-col items-center justify-center py-5 px-4 sm:py-8 sm:px-8 md:py-10 md:px-10 max-[480px]:max-w-[calc(100vw-1.5rem)] min-w-0 overflow-hidden">
         {/* Logo */}
         <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center mb-3 sm:mb-4">
           <img
@@ -31,7 +31,7 @@ export default function SiteIntroBanner({ onEnter }) {
 
         {/* Título principal */}
         <motion.h1
-          className="text-2xl sm:text-3xl md:text-5xl font-serif font-bold text-center uppercase tracking-wider mb-2"
+          className="text-2xl sm:text-3xl md:text-5xl font-serif font-bold text-center uppercase tracking-wider mb-2 w-full max-w-full break-words"
           style={{
             fontFamily: "'Cinzel', serif",
             background: 'linear-gradient(180deg, #f5e6c8 0%, var(--kov-gold) 40%, #8b6914 100%)',
@@ -49,7 +49,7 @@ export default function SiteIntroBanner({ onEnter }) {
 
         {/* Subtítulo */}
         <motion.p
-          className="text-sm sm:text-base md:text-lg text-center mb-4 sm:mb-6"
+          className="text-sm sm:text-base md:text-lg text-center mb-4 sm:mb-6 w-full max-w-full truncate"
           style={{ color: 'var(--kov-text-muted)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

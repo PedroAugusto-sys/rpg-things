@@ -74,6 +74,7 @@ export default function CharacterShowcase({ characters }) {
   }, [])
   const portraitGlowColor = selected?.corTema || '#c9a227'
   const whooshRef = useRef(null)
+  const cardRefsRef = useRef({})
   useEffect(() => {
     whooshRef.current = new Audio('/audios/whoosh.mp3')
   }, [])
@@ -84,6 +85,11 @@ export default function CharacterShowcase({ characters }) {
   useEffect(() => {
     setPortraitRotateY(0)
   }, [selected?.id])
+  useEffect(() => {
+    if (!isMobile || !selected?.id) return
+    const el = cardRefsRef.current[selected.id]
+    if (el) el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }, [selected?.id, isMobile])
 
   const handleSelectCard = useCallback((char) => {
     if (char.id === selected?.id) {
@@ -181,6 +187,7 @@ export default function CharacterShowcase({ characters }) {
             return (
               <motion.div
                 key={char.id}
+                ref={(el) => { if (el) cardRefsRef.current[char.id] = el }}
                 className={`shrink-0 ${isMobile ? 'snap-center' : ''}`}
                 style={{
                   width: isMobile ? 'min(280px, 85vw)' : cardWidth,
@@ -222,7 +229,7 @@ export default function CharacterShowcase({ characters }) {
                     boxShadow: cardGlow,
                   }}
                 >
-                <div className="flex flex-col h-full min-h-0">
+                <div className="flex flex-col h-full min-h-0 min-w-0 overflow-hidden">
                   {/* Faixa fina de cor no topo */}
                   <div
                     className="h-1.5 w-full shrink-0"
@@ -230,7 +237,7 @@ export default function CharacterShowcase({ characters }) {
                   />
 
                   {/* Conteúdo centralizado: avatar maior mais abaixo, depois nome, título e tags */}
-                  <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-3 pb-4 pt-6 overflow-visible">
+                  <div className="flex-1 flex flex-col items-center justify-center min-h-0 min-w-0 px-3 pb-4 pt-6 overflow-hidden">
                     <div
                       className="h-20 w-20 rounded-full border-2 border-[var(--kov-bg-card)] shadow-lg flex items-center justify-center overflow-hidden shrink-0"
                       style={{ backgroundColor: char.corTema || 'var(--kov-gold)' }}
@@ -247,28 +254,28 @@ export default function CharacterShowcase({ characters }) {
                         </span>
                       )}
                     </div>
-                    <h2 className="text-base font-bold leading-tight text-[var(--kov-text)] text-center mt-3">
-                      {char.nome}
+                    <h2 className="text-base font-bold leading-tight text-[var(--kov-text)] text-center mt-3 w-full min-w-0 px-0.5">
+                      <span className="block truncate" title={char.nome}>{char.nome}</span>
                       {char.titulo && (
-                        <span className="block text-xs font-normal opacity-80 mt-0.5" style={{ color: char.corTema || 'var(--kov-gold)' }}>
+                        <span className="block text-xs font-normal opacity-80 mt-0.5 truncate max-w-full" style={{ color: char.corTema || 'var(--kov-gold)' }} title={char.titulo}>
                           {char.titulo}
                         </span>
                       )}
                     </h2>
-                    <div className="flex flex-wrap justify-center gap-1.5 mt-2 overflow-visible">
+                    <div className="flex flex-wrap justify-center gap-1.5 mt-2 w-full min-w-0 overflow-hidden">
                       {(char.multiclasseFromIndex != null ? char.classe?.slice(0, char.multiclasseFromIndex) : char.classe)?.map((c, i) => {
                         const style = char.classeTagStyles?.[i] ?? getTagStyle(i)
                         return (
                           <span key={`${c}-${i}`} className="inline-flex items-center gap-1">
                             <span
-                              className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap ${style.bg} ${style.text} ${style.border}`}
+                              className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium max-w-[120px] min-w-0 truncate ${style.bg} ${style.text} ${style.border}`}
                               title={c}
                             >
                               {c}
                             </span>
                             {((char.multiclasseFromIndex != null ? i === char.multiclasseFromIndex : i > 0) && char.multiclasse !== false) && (
                               <span className="relative group inline-block">
-                                <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-medium text-violet-200 cursor-help">
+                                <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-medium text-violet-200 cursor-help shrink-0">
                                   (Multiclasse)
                                 </span>
                                 {char.classe?.length > (char.multiclasseFromIndex ?? 1) && (
@@ -286,7 +293,7 @@ export default function CharacterShowcase({ characters }) {
                         )
                       })}
                       {char.multiclasse !== false && char.multiclasseFromIndex != null && char.classe?.length > char.multiclasseFromIndex && (
-                        <span className="relative group inline-block">
+                        <span className="relative group inline-block shrink-0">
                           <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-medium text-violet-200 cursor-help">
                             (Multiclasse)
                           </span>
@@ -302,7 +309,7 @@ export default function CharacterShowcase({ characters }) {
                       {char.personalidade?.map((p) => (
                         <span
                           key={p}
-                          className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium max-w-[100px] min-w-0 truncate border-sky-400/50 bg-sky-500/15 text-sky-200"
+                          className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium max-w-[110px] min-w-0 truncate border-sky-400/50 bg-sky-500/15 text-sky-200"
                           title={p}
                         >
                           {p}
