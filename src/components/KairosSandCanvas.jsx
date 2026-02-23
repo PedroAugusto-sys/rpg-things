@@ -1,10 +1,10 @@
 import { useRef, useEffect, useState } from 'react'
 
 const SAND_COUNT = 140
-const SAND_COUNT_MOBILE = 45
+const SAND_COUNT_MOBILE = 20
 const GLYPH_CHANCE = 0.07
 const BURST_COUNT = 90
-const BURST_COUNT_MOBILE = 35
+const BURST_COUNT_MOBILE = 0
 const BURST_GLYPH_CHANCE = 0.08
 const BURST_LIFESPAN_MIN = 2
 const BURST_LIFESPAN_MAX = 3
@@ -148,7 +148,7 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
       const w = window.innerWidth
       const h = window.innerHeight
       const mobile = w < 768
-      const dpr = mobile ? Math.min(2, window.devicePixelRatio || 1) : (window.devicePixelRatio || 1)
+      const dpr = mobile ? 1 : (window.devicePixelRatio || 1)
       canvas.width = w * dpr
       canvas.height = h * dpr
       canvas.style.width = `${w}px`
@@ -218,6 +218,7 @@ export default function KairosSandCanvas({ active = false, trigger = 0, classNam
       particlesRef.current
         .sort((a, b) => a.depth - b.depth)
         .forEach((p) => {
+          if (mobile && p.type === 'glyph') return
           const useBlur = !mobile && p.depth > BLUR_DEPTH_THRESHOLD
           if (useBlur) ctx.filter = 'blur(1.5px)'
           else ctx.filter = 'none'

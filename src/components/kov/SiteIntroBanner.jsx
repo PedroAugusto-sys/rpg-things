@@ -9,8 +9,8 @@ import Button from './Button'
 export default function SiteIntroBanner({ onEnter }) {
   return (
     <motion.div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 sm:p-6"
-      style={{ backgroundColor: 'var(--kov-bg)' }}
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      style={{ backgroundColor: 'var(--kov-bg)', paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
@@ -19,9 +19,9 @@ export default function SiteIntroBanner({ onEnter }) {
       <div className="kov-intro-particles absolute inset-0 overflow-hidden pointer-events-none" aria-hidden />
 
       {/* Moldura com Border.svg */}
-      <div className="kov-intro-frame kov-border-svg relative w-full max-w-xl mx-auto flex flex-col items-center justify-center py-6 px-5 sm:py-8 sm:px-8 md:py-10 md:px-10">
+      <div className="kov-intro-frame kov-border-svg relative w-full max-w-xl mx-auto flex flex-col items-center justify-center py-5 px-4 sm:py-8 sm:px-8 md:py-10 md:px-10 max-[480px]:max-w-[calc(100vw-1.5rem)]">
         {/* Logo */}
-        <div className="w-20 h-20 md:w-24 md:h-24 flex items-center justify-center mb-4">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center mb-3 sm:mb-4">
           <img
             src="/imagens/assets/Logo.svg"
             alt="Biblioteca de Personagens"

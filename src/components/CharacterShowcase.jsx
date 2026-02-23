@@ -38,6 +38,17 @@ function getConceptImages(imagens) {
   return conceptArt ? [conceptArt] : []
 }
 
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < breakpoint)
+  useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`)
+    const fn = () => setIsMobile(mql.matches)
+    mql.addEventListener('change', fn)
+    return () => mql.removeEventListener('change', fn)
+  }, [breakpoint])
+  return isMobile
+}
+
 export default function CharacterShowcase({ characters }) {
   const [introDismissed, setIntroDismissed] = useState(false)
   const [selected, setSelected] = useState(null)
@@ -52,6 +63,7 @@ export default function CharacterShowcase({ characters }) {
   const [snowTrigger, setSnowTrigger] = useState(0)
   const [sandTrigger, setSandTrigger] = useState(0)
   const [discordCopied, setDiscordCopied] = useState(false)
+  const isMobile = useIsMobile(640)
   const portraitGlowOn = selected && (hoveredCardId === selected.id || portraitHovered)
 
   const handleCopyDiscord = useCallback(() => {
@@ -91,7 +103,7 @@ export default function CharacterShowcase({ characters }) {
 
   return (
     <div
-      className="min-h-screen text-white transition-colors duration-500 bg-cover bg-center bg-no-repeat"
+      className="min-h-screen text-white transition-colors duration-500 bg-no-repeat md:bg-cover md:bg-center bg-contain bg-top"
       style={{
         backgroundColor: 'var(--kov-bg)',
         backgroundImage: 'url("/imagens/assets/Frame%201.svg")',
@@ -121,7 +133,7 @@ export default function CharacterShowcase({ characters }) {
       {/* Areia do Tempo: partículas contínuas + burst no flip do retrato */}
       <KairosSandCanvas active={isKairos} trigger={sandTrigger} />
 
-      <div className="relative z-10 flex-1 px-4 py-4 sm:px-6 sm:py-6 md:p-8 lg:p-10">
+      <div className="relative z-10 flex-1 px-4 py-4 sm:px-6 sm:py-6 md:p-8 lg:p-10 pt-[max(1rem,env(safe-area-inset-top))]">
         <AnimatePresence mode="wait">
           {selected && (
             <motion.h1
@@ -130,7 +142,7 @@ export default function CharacterShowcase({ characters }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="title-cronicas text-center text-2xl sm:text-3xl md:text-5xl uppercase mb-6 sm:mb-8 md:mb-12"
+              className="title-cronicas text-center text-2xl sm:text-3xl md:text-5xl uppercase mb-8 sm:mb-10 md:mb-12"
               style={{
                 fontFamily: "'Cinzel', serif",
                 fontWeight: 700,
@@ -147,8 +159,14 @@ export default function CharacterShowcase({ characters }) {
           )}
         </AnimatePresence>
 
-        {/* Carrossel centralizado: card focado maior + glow */}
-        <div className={`flex justify-center gap-3 sm:gap-4 md:gap-8 mb-8 sm:mb-12 md:mb-16 lg:mb-20 overflow-x-auto overflow-y-visible py-4 sm:py-6 md:py-8 px-2 sm:px-4 ${selected ? 'mt-8 sm:mt-12 md:mt-16 items-center pt-6 sm:pt-8 md:pt-12' : 'items-end'}`} style={{ WebkitOverflowScrolling: 'touch' }}>
+        {/* Carrossel: horizontal com snap no mobile, linha no desktop */}
+        <div
+          className={`flex flex-row justify-center gap-4 sm:gap-4 md:gap-8 mb-8 sm:mb-12 md:mb-16 lg:mb-20 overflow-x-auto overflow-y-visible py-4 sm:py-6 md:py-8 px-0 sm:px-4 ${selected ? 'mt-6 sm:mt-12 md:mt-16 items-center pt-4 sm:pt-8 md:pt-12' : 'items-end'} ${isMobile ? 'snap-x snap-mandatory' : ''} ${isMobile ? 'pl-[max(1rem,calc(50vw-140px))] pr-[max(1rem,calc(50vw-140px))]' : ''}`}
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            ...(isMobile ? { scrollPaddingInline: 'max(1rem, calc(50vw - 140px))' } : {}),
+          }}
+        >
           {characters.map((char, index) => {
             const isSelected = selected?.id === char.id
             const isHovered = hoveredCardId === char.id
@@ -158,13 +176,17 @@ export default function CharacterShowcase({ characters }) {
                 : isHovered
                   ? `0 0 28px ${char.corTema}50, 0 0 56px ${char.corTema}28`
                   : 'none'
-            const cardWidth = isSelected ? 320 : 240
+            const cardWidth = isMobile ? 280 : (isSelected ? 320 : 240)
             const cardHeight = Math.round(cardWidth * 1.28)
             return (
               <motion.div
                 key={char.id}
-                className="shrink-0"
-                style={{ width: cardWidth, height: cardHeight }}
+                className={`shrink-0 ${isMobile ? 'snap-center' : ''}`}
+                style={{
+                  width: isMobile ? 'min(280px, 85vw)' : cardWidth,
+                  height: cardHeight,
+                  ...(isMobile ? { scrollSnapStop: 'always' } : {}),
+                }}
                 initial={{ opacity: 0, y: 40, scale: 0.85 }}
                 animate={{
                   opacity: isSelected ? 1 : isHovered ? 0.95 : 0.6,
