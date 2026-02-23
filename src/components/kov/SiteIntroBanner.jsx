@@ -31,7 +31,7 @@ export default function SiteIntroBanner({ onEnter }) {
 
         {/* Título principal */}
         <motion.h1
-          className="text-2xl sm:text-3xl md:text-5xl font-serif font-bold text-center uppercase tracking-wider mb-2 w-full max-w-full break-words"
+          className="text-lg sm:text-xl md:text-3xl font-serif font-bold text-center uppercase tracking-wider mb-2 w-full max-w-full break-words leading-tight"
           style={{
             fontFamily: "'Cinzel', serif",
             background: 'linear-gradient(180deg, #f5e6c8 0%, var(--kov-gold) 40%, #8b6914 100%)',

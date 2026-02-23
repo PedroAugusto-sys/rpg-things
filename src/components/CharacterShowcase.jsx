@@ -167,12 +167,19 @@ export default function CharacterShowcase({ characters }) {
 
         {/* Carrossel: horizontal com snap no mobile, linha no desktop */}
         <div
-          className={`flex flex-row justify-center gap-4 sm:gap-4 md:gap-8 mb-8 sm:mb-12 md:mb-16 lg:mb-20 overflow-x-auto overflow-y-visible py-4 sm:py-6 md:py-8 px-0 sm:px-4 ${selected ? 'mt-6 sm:mt-12 md:mt-16 items-center pt-4 sm:pt-8 md:pt-12' : 'items-end'} ${isMobile ? 'snap-x snap-mandatory' : ''} ${isMobile ? 'pl-[max(1rem,calc(50vw-140px))] pr-[max(1rem,calc(50vw-140px))]' : ''}`}
+          className={`flex flex-row justify-center gap-4 sm:gap-4 md:gap-8 mb-8 sm:mb-12 md:mb-16 lg:mb-20 overflow-x-auto overflow-y-visible py-4 sm:py-6 md:py-8 px-0 sm:px-4 ${selected ? 'mt-6 sm:mt-12 md:mt-16 items-center pt-4 sm:pt-8 md:pt-12' : 'items-end'} ${isMobile ? 'snap-x snap-mandatory' : ''}`}
           style={{
             WebkitOverflowScrolling: 'touch',
-            ...(isMobile ? { scrollPaddingInline: 'max(1rem, calc(50vw - 140px))' } : {}),
           }}
         >
+          {/* Espaçador à esquerda no mobile: evita o primeiro card ficar cortado */}
+          {isMobile && (
+            <div
+              className="shrink-0"
+              style={{ width: 'max(1rem, (100vw - min(280px, 85vw)) / 2)' }}
+              aria-hidden
+            />
+          )}
           {characters.map((char, index) => {
             const isSelected = selected?.id === char.id
             const isHovered = hoveredCardId === char.id
@@ -188,7 +195,7 @@ export default function CharacterShowcase({ characters }) {
               <motion.div
                 key={char.id}
                 ref={(el) => { if (el) cardRefsRef.current[char.id] = el }}
-                className={`shrink-0 ${isMobile ? 'snap-center' : ''}`}
+                className={`shrink-0 ${isMobile ? (index === 0 ? 'snap-start' : index === characters.length - 1 ? 'snap-end' : 'snap-center') : ''}`}
                 style={{
                   width: isMobile ? 'min(280px, 85vw)' : cardWidth,
                   height: cardHeight,
@@ -322,6 +329,14 @@ export default function CharacterShowcase({ characters }) {
               </motion.div>
             )
           })}
+          {/* Espaçador à direita no mobile: último card fica centralizável sem cortar */}
+          {isMobile && (
+            <div
+              className="shrink-0"
+              style={{ width: 'max(1rem, (100vw - min(280px, 85vw)) / 2)' }}
+              aria-hidden
+            />
+          )}
         </div>
 
         {/* Seção de detalhes: Sobre + Concept Art (fade-in + slide-up) */}
