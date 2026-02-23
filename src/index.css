@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./styles/kov-tokens.css";
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -65,4 +66,15 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Botão Discord do footer: sempre fundo do tema, nunca branco */
+.kov-footer-discord-btn {
+  background-color: transparent !important;
+  color: var(--kov-text-muted) !important;
+}
+.kov-footer-discord-btn:hover {
+  background-color: var(--kov-bg) !important;
+  border-color: var(--kov-border) !important;
+  color: var(--kov-gold) !important;
 }

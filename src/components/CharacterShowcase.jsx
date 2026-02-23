@@ -1,6 +1,11 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SnowCanvas from './SnowCanvas'
+import KairosSandCanvas from './KairosSandCanvas'
+import SiteIntroBanner from './kov/SiteIntroBanner'
+import Button from './kov/Button'
+import StatBar from './kov/StatBar'
+import StatIcon from './kov/StatIcon'
 
 const WHOOSH_DURATION = 0.28
 
@@ -34,15 +39,28 @@ function getConceptImages(imagens) {
 }
 
 export default function CharacterShowcase({ characters }) {
+  const [introDismissed, setIntroDismissed] = useState(false)
   const [selected, setSelected] = useState(null)
   const [entranceDone, setEntranceDone] = useState(false)
   const [hoveredCardId, setHoveredCardId] = useState(null)
-  const [ulfgarPortraitHovered, setUlfgarPortraitHovered] = useState(false)
+  const [hoveredStatKey, setHoveredStatKey] = useState(null)
+  const [portraitHovered, setPortraitHovered] = useState(false)
   const [portraitRotateY, setPortraitRotateY] = useState(0)
   const conceptImages = selected ? getConceptImages(selected.imagens) : []
   const isUlfgar = selected?.id === 'char-001'
-  const ulfgarCardHovered = hoveredCardId === 'char-001'
-  const ulfgarGlowOn = isUlfgar && (ulfgarCardHovered || ulfgarPortraitHovered)
+  const isKairos = selected?.id === 'char-002'
+  const [snowTrigger, setSnowTrigger] = useState(0)
+  const [sandTrigger, setSandTrigger] = useState(0)
+  const [discordCopied, setDiscordCopied] = useState(false)
+  const portraitGlowOn = selected && (hoveredCardId === selected.id || portraitHovered)
+
+  const handleCopyDiscord = useCallback(() => {
+    navigator.clipboard.writeText('astrocard').then(() => {
+      setDiscordCopied(true)
+      setTimeout(() => setDiscordCopied(false), 2500)
+    })
+  }, [])
+  const portraitGlowColor = selected?.corTema || '#c9a227'
   const whooshRef = useRef(null)
   useEffect(() => {
     whooshRef.current = new Audio('/audios/whoosh.mp3')
@@ -66,26 +84,44 @@ export default function CharacterShowcase({ characters }) {
       audio.play().catch(() => {})
     }
     setSelected(char)
+    if (char.id === 'char-001') setSnowTrigger((t) => t + 1)
   }, [selected?.id])
 
   if (!characters?.length) return null
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white transition-colors duration-500">
+    <div
+      className="min-h-screen text-white transition-colors duration-500 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundColor: 'var(--kov-bg)',
+        backgroundImage: 'url("/imagens/assets/Frame%201.svg")',
+      }}
+    >
+      <AnimatePresence>
+        {!introDismissed && (
+          <SiteIntroBanner key="intro" onEnter={() => setIntroDismissed(true)} />
+        )}
+      </AnimatePresence>
+
+      {introDismissed && (
+        <div className="flex flex-col min-h-screen">
       {/* Background glow dinâmico (blur que muda com o personagem) */}
       <div
-        className="fixed inset-0 opacity-25 blur-[120px] pointer-events-none transition-colors duration-500"
-        style={{ backgroundColor: selected?.corTema ?? '#1e293b' }}
+        className="fixed inset-0 opacity-20 blur-[120px] pointer-events-none transition-colors duration-500"
+        style={{ backgroundColor: selected?.corTema ?? 'var(--kov-gold)' }}
         aria-hidden
       />
 
       {/* Neve caindo quando Ulfgar está selecionado (fundo) */}
-      {isUlfgar && <SnowCanvas active className="z-[5]" />}
+      {isUlfgar && <SnowCanvas active trigger={snowTrigger} className="z-[5]" />}
 
       {/* Camada de neve à frente do título (profundidade) */}
-      {isUlfgar && <SnowCanvas active foreground className="z-[15]" />}
+      {isUlfgar && <SnowCanvas active foreground trigger={snowTrigger} className="z-[15]" />}
 
-      <div className={`relative z-10 p-8 md:p-10 ${selected ? 'pt-24 md:pt-28' : ''}`}>
+      {/* Areia do Tempo: partículas contínuas + burst no flip do retrato */}
+      <KairosSandCanvas active={isKairos} trigger={sandTrigger} />
+
+      <div className="relative z-10 flex-1 p-8 md:p-10">
         <AnimatePresence mode="wait">
           {selected && (
             <motion.h1
@@ -98,21 +134,21 @@ export default function CharacterShowcase({ characters }) {
               style={{
                 fontFamily: "'Cinzel', serif",
                 fontWeight: 700,
-                background: 'linear-gradient(180deg, #FFFFFF 0%, #A5C9FF 100%)',
+                background: 'linear-gradient(180deg, #f5e6c8 0%, var(--kov-gold) 50%, #8b6914 100%)',
                 WebkitBackgroundClip: 'text',
                 backgroundClip: 'text',
                 color: 'transparent',
                 letterSpacing: '0.28em',
-                filter: 'drop-shadow(0 0 20px rgba(165, 201, 255, 0.5)) drop-shadow(0 0 40px rgba(165, 201, 255, 0.3))',
+                filter: 'drop-shadow(0 0 20px var(--kov-glow)) drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
               }}
             >
-              CRÔNICAS DE ULFGAR
+              CRÔNICAS DE {selected.nome.toUpperCase()}
             </motion.h1>
           )}
         </AnimatePresence>
 
         {/* Carrossel centralizado: card focado maior + glow */}
-        <div className={`flex justify-center gap-4 md:gap-8 mb-16 md:mb-20 overflow-x-auto pb-4 ${selected ? 'mt-16 items-center pt-12' : 'items-end'}`}>
+        <div className={`flex justify-center gap-4 md:gap-8 mb-16 md:mb-20 overflow-x-auto overflow-y-visible py-8 px-4 ${selected ? 'mt-16 items-center pt-12' : 'items-end'}`}>
           {characters.map((char, index) => {
             const isSelected = selected?.id === char.id
             const isHovered = hoveredCardId === char.id
@@ -123,16 +159,17 @@ export default function CharacterShowcase({ characters }) {
                   ? `0 0 28px ${char.corTema}50, 0 0 56px ${char.corTema}28`
                   : 'none'
             const cardWidth = isSelected ? 320 : 240
+            const cardHeight = Math.round(cardWidth * 1.28)
             return (
               <motion.div
                 key={char.id}
                 className="shrink-0"
-                style={{ width: cardWidth }}
+                style={{ width: cardWidth, height: cardHeight }}
                 initial={{ opacity: 0, y: 40, scale: 0.85 }}
                 animate={{
                   opacity: isSelected ? 1 : isHovered ? 0.95 : 0.6,
                   y: 0,
-                  scale: isSelected ? 1.05 : 0.92,
+                  scale: isSelected ? 1 : 0.92,
                 }}
                 transition={{
                   type: 'tween',
@@ -146,83 +183,110 @@ export default function CharacterShowcase({ characters }) {
                   onClick={() => handleSelectCard(char)}
                   onMouseEnter={() => setHoveredCardId(char.id)}
                   onMouseLeave={() => setHoveredCardId(null)}
-                  whileHover={{ scale: isSelected ? 1.02 : 1.05 }}
+                  whileHover={{ scale: isSelected ? 1 : 1.01 }}
                   whileTap={{ scale: 0.92 }}
+                  aria-label={`Selecionar personagem ${char.nome}${char.titulo ? `, ${char.titulo}` : ''}`}
+                  aria-pressed={isSelected}
                   className={`
-                    w-full h-full cursor-pointer text-left block
-                    rounded-xl overflow-hidden border-2
+                    w-full h-full cursor-pointer text-left flex flex-col relative
+                    rounded-lg overflow-visible kov-frame
                     transition-[box-shadow,border-color,background-color] duration-[280ms] ease-out
-                    ${isSelected ? 'border-white/60' : 'border-white/10 hover:opacity-80'}
+                    hover:z-20
+                    ${isSelected ? 'ring-2 ring-[var(--kov-gold-soft)] ring-offset-2 ring-offset-[var(--kov-bg)]' : ''}
                   `}
                   style={{
-                    backgroundColor: isHovered ? 'rgba(42, 43, 46, 0.98)' : '#1e1f22',
+                    backgroundColor: isHovered ? 'var(--kov-bg-elevated)' : 'var(--kov-bg-card)',
+                    borderColor: isSelected ? 'var(--kov-gold-soft)' : 'var(--kov-border)',
                     boxShadow: cardGlow,
                   }}
                 >
-                <div>
-                  {/* Banner estilo Discord */}
+                <div className="flex flex-col h-full min-h-0">
+                  {/* Faixa fina de cor no topo */}
                   <div
-                    className="h-14 w-full shrink-0"
-                    style={{ backgroundColor: char.corTema }}
+                    className="h-1.5 w-full shrink-0"
+                    style={{ backgroundColor: char.corTema || 'var(--kov-gold)' }}
                   />
 
-                  <div className="relative px-4 pb-5 -mt-7">
-                    {/* Avatar circular com borda */}
-                    <div className="flex justify-start">
-                      <div
-                        className="h-14 w-14 rounded-full border-[3px] border-[#1e1f22] shadow-xl flex items-center justify-center overflow-hidden shrink-0"
-                        style={{ backgroundColor: char.corTema }}
-                      >
-                        {char.imagens?.avatar ? (
-                          <img
-                            src={char.imagens.avatar}
-                            alt=""
-                            className="h-full w-full object-cover object-top"
-                          />
-                        ) : (
-                          <span className="text-base font-bold text-white">
-                            {getInitials(char.nome)}
-                          </span>
-                        )}
-                      </div>
+                  {/* Conteúdo centralizado: avatar maior mais abaixo, depois nome, título e tags */}
+                  <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-3 pb-4 pt-6 overflow-visible">
+                    <div
+                      className="h-20 w-20 rounded-full border-2 border-[var(--kov-bg-card)] shadow-lg flex items-center justify-center overflow-hidden shrink-0"
+                      style={{ backgroundColor: char.corTema || 'var(--kov-gold)' }}
+                    >
+                      {char.imagens?.avatar ? (
+                        <img
+                          src={char.imagens.avatar}
+                          alt=""
+                          className="h-full w-full object-cover object-top"
+                        />
+                      ) : (
+                        <span className="text-lg font-bold text-[var(--kov-text)]">
+                          {getInitials(char.nome)}
+                        </span>
+                      )}
                     </div>
-
-                    <h2 className="mt-2 text-lg font-bold text-white">
+                    <h2 className="text-base font-bold leading-tight text-[var(--kov-text)] text-center mt-3">
                       {char.nome}
                       {char.titulo && (
-                        <span className="block text-sm font-normal opacity-80" style={{ color: char.corTema }}>
+                        <span className="block text-xs font-normal opacity-80 mt-0.5" style={{ color: char.corTema || 'var(--kov-gold)' }}>
                           {char.titulo}
                         </span>
                       )}
                     </h2>
-
-                    {/* Badges de classe */}
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {char.classe?.map((c, i) => {
-                        const style = getTagStyle(i)
+                    <div className="flex flex-wrap justify-center gap-1.5 mt-2 overflow-visible">
+                      {(char.multiclasseFromIndex != null ? char.classe?.slice(0, char.multiclasseFromIndex) : char.classe)?.map((c, i) => {
+                        const style = char.classeTagStyles?.[i] ?? getTagStyle(i)
                         return (
-                          <span
-                            key={`${c}-${i}`}
-                            className={`inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium ${style.bg} ${style.text} ${style.border}`}
-                          >
-                            {c}
+                          <span key={`${c}-${i}`} className="inline-flex items-center gap-1">
+                            <span
+                              className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium whitespace-nowrap ${style.bg} ${style.text} ${style.border}`}
+                              title={c}
+                            >
+                              {c}
+                            </span>
+                            {((char.multiclasseFromIndex != null ? i === char.multiclasseFromIndex : i > 0) && char.multiclasse !== false) && (
+                              <span className="relative group inline-block">
+                                <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-medium text-violet-200 cursor-help">
+                                  (Multiclasse)
+                                </span>
+                                {char.classe?.length > (char.multiclasseFromIndex ?? 1) && (
+                                  <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-[100] pointer-events-none">
+                                    <div className="rounded-lg border border-[var(--kov-border)] bg-[var(--kov-bg-elevated)] shadow-xl p-2 min-w-[80px] whitespace-nowrap">
+                                      <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-medium text-violet-200">
+                                        {char.multiclasseTooltip ?? char.classe.slice(char.multiclasseFromIndex ?? 1).join(': ')}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </span>
+                            )}
                           </span>
                         )
                       })}
-                    </div>
-                    {/* Tags de personalidade (ex.: Ulfgar) */}
-                    {char.personalidade?.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-1.5">
-                        {char.personalidade.map((p, i) => (
-                          <span
-                            key={p}
-                            className="inline-flex items-center rounded border px-2 py-0.5 text-xs font-medium border-sky-400/50 bg-sky-500/15 text-sky-200"
-                          >
-                            {p}
+                      {char.multiclasse !== false && char.multiclasseFromIndex != null && char.classe?.length > char.multiclasseFromIndex && (
+                        <span className="relative group inline-block">
+                          <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-medium text-violet-200 cursor-help">
+                            (Multiclasse)
                           </span>
-                        ))}
-                      </div>
-                    )}
+                          <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-[100] pointer-events-none">
+                            <div className="rounded-lg border border-[var(--kov-border)] bg-[var(--kov-bg-elevated)] shadow-xl p-2 min-w-[80px] whitespace-nowrap">
+                              <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-medium text-violet-200">
+                                {char.multiclasseTooltip ?? char.classe.slice(char.multiclasseFromIndex).join(': ')}
+                              </span>
+                            </div>
+                          </div>
+                        </span>
+                      )}
+                      {char.personalidade?.map((p) => (
+                        <span
+                          key={p}
+                          className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium max-w-[100px] min-w-0 truncate border-sky-400/50 bg-sky-500/15 text-sky-200"
+                          title={p}
+                        >
+                          {p}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 </motion.button>
@@ -242,28 +306,169 @@ export default function CharacterShowcase({ characters }) {
               transition={{ duration: WHOOSH_DURATION, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="max-w-5xl mx-auto"
             >
-              {/* Aba de navegação (estilo referência) */}
+              {/* Aba de navegação estilo KOV */}
               <div className="flex justify-center mb-6">
-                <span
-                  className="rounded-full border border-white/20 bg-white/5 px-6 py-2 text-sm font-medium tracking-wide"
-                  style={{ color: selected.corTema }}
-                >
+                <Button variant="secondary" disabled className="cursor-default" aria-label="Aba Sobre">
                   Sobre
-                </span>
+                </Button>
               </div>
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.06, duration: WHOOSH_DURATION * 0.9 }}
-                className="rounded-3xl border border-white/10 bg-white/5 p-6 md:p-8 backdrop-blur-md"
+                className="rounded-xl kov-frame p-6 md:p-8"
               >
                 <div className="grid grid-cols-1 md:grid-cols-[1fr_1.4fr] gap-8 md:gap-10">
                   {/* Coluna Sobre */}
                   <div>
+                    {/* Atributos, Classe, Antecedente e Perícias */}
+                    <div className="mb-6 p-4 rounded-lg bg-[var(--kov-bg)] border border-[var(--kov-border)]">
+                      {selected.stats && (
+                        <>
+                          <div className="flex items-baseline gap-2 mb-3">
+                            <span className="text-[10px] font-medium uppercase tracking-wider text-[var(--kov-text-muted)]">Human (Marca de Manipulação)</span>
+                            <h4 className="text-xs font-semibold uppercase tracking-wider text-[var(--kov-gold)]">Atributos</h4>
+                          </div>
+                          <div className="space-y-1 mb-4">
+                            {[
+                              { key: 'str', label: 'Força', value: selected.stats.str, displayValue: selected.stats.strDisplay, variant: 'legendary' },
+                              { key: 'dex', label: 'Destreza', value: selected.stats.dex, variant: 'legendary' },
+                              { key: 'con', label: 'Constituição', value: selected.stats.con, displayValue: selected.stats.conDisplay, variant: 'legendary' },
+                              { key: 'int', label: 'Inteligência', value: selected.stats.int, displayValue: selected.stats.intDisplay, variant: 'legendary' },
+                              { key: 'wis', label: 'Sabedoria', value: selected.stats.wis, displayValue: selected.stats.wisDisplay, variant: 'legendary' },
+                              { key: 'cha', label: 'Carisma', value: selected.stats.cha, variant: 'legendary' },
+                            ]
+                              .filter(({ key }) => selected.stats[key] != null)
+                              .map(({ key, label, value, displayValue, variant }) => (
+                                <div
+                                  key={key}
+                                  className="flex items-center gap-2 rounded px-2 py-1.5 transition-colors duration-200 hover:bg-[var(--kov-bg-elevated)]"
+                                  onMouseEnter={() => setHoveredStatKey(key)}
+                                  onMouseLeave={() => setHoveredStatKey(null)}
+                                >
+                                  <StatIcon type={key} />
+                                  <StatBar
+                                    label={label}
+                                    value={value}
+                                    max={20}
+                                    displayValue={displayValue}
+                                    showBreakdown={hoveredStatKey === key}
+                                    variant={variant}
+                                    className="flex-1 min-w-0"
+                                  />
+                                </div>
+                              ))}
+                          </div>
+                        </>
+                      )}
+                      {selected.classe?.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--kov-gold)] mb-1">Classe</p>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {(selected.multiclasseFromIndex != null ? selected.classe.slice(0, selected.multiclasseFromIndex) : selected.classe).map((c, i) => {
+                              const tagStyle = selected.classeTagStyles?.[i] ?? getTagStyle(i)
+                              return (
+                                <span key={i} className="inline-flex items-center gap-1.5">
+                                  <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-xs font-medium ${tagStyle.bg} ${tagStyle.text} ${tagStyle.border}`}>
+                                    {c}
+                                  </span>
+                                  {((selected.multiclasseFromIndex != null ? i === selected.multiclasseFromIndex : i > 0) && selected.multiclasse !== false) && (
+                                    <span className="relative group inline-block">
+                                      <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-xs font-medium text-violet-200 cursor-help">
+                                        (Multiclasse)
+                                      </span>
+                                      {selected.classe?.length > (selected.multiclasseFromIndex ?? 1) && (
+                                        <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-50 pointer-events-none">
+                                          <div className="rounded-lg border border-[var(--kov-border)] bg-[var(--kov-bg-elevated)] shadow-xl p-2 min-w-[80px]">
+                                            <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-xs font-medium text-violet-200 whitespace-nowrap">
+                                              {selected.multiclasseTooltip ?? selected.classe.slice(selected.multiclasseFromIndex ?? 1).join(': ')}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </span>
+                                  )}
+                                </span>
+                              )
+                            })}
+                            {selected.multiclasse !== false && selected.multiclasseFromIndex != null && selected.classe?.length > selected.multiclasseFromIndex && (
+                              <span className="relative group inline-block">
+                                <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-xs font-medium text-violet-200 cursor-help">
+                                  (Multiclasse)
+                                </span>
+                                <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-50 pointer-events-none">
+                                  <div className="rounded-lg border border-[var(--kov-border)] bg-[var(--kov-bg-elevated)] shadow-xl p-2 min-w-[80px]">
+                                    <span className="rounded border border-violet-500/50 bg-violet-500/20 px-1.5 py-0.5 text-xs font-medium text-violet-200 whitespace-nowrap">
+                                      {selected.multiclasseTooltip ?? selected.classe.slice(selected.multiclasseFromIndex ?? 1).join(': ')}
+                                    </span>
+                                  </div>
+                                </div>
+                              </span>
+                            )}
+                          </div>
+                          {selected.classePericias?.length > 0 && (
+                            <p className="text-xs text-[var(--kov-text-muted)] mt-0.5">
+                              Perícias – {selected.classePericias.join(', ')}.
+                            </p>
+                          )}
+                          {selected.classeTalento && (
+                            <p className="text-xs text-[var(--kov-text-muted)] mt-0.5">
+                              Talento – {selected.classeTalento}.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {selected.antecedente && (
+                        <div>
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--kov-gold)] mb-1">
+                            Antecedente ({selected.antecedente})
+                          </p>
+                          {selected.antecedentePericias?.length > 0 && (
+                            <p className="text-xs text-[var(--kov-text-muted)]">
+                              Perícias – {selected.antecedentePericias.join(', ')}.
+                            </p>
+                          )}
+                          {selected.antecedenteFerramentas?.length > 0 && (
+                            <p className="text-xs text-[var(--kov-text-muted)] mt-0.5">
+                              Ferramentas – {selected.antecedenteFerramentas.join(', ')}.
+                            </p>
+                          )}
+                          {selected.antecedenteTraco && (
+                            <p className="text-xs text-[var(--kov-text-muted)] mt-0.5">
+                              Traço – {selected.antecedenteTraco}.
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {selected.equipamento?.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-[var(--kov-border)]">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--kov-gold)] mb-2">
+                            Equipamento
+                          </p>
+                          {selected.equipamento.map((bloco, i) => (
+                            <div key={i} className="mb-2 last:mb-0">
+                              <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--kov-text-muted)] mb-0.5">
+                                Equipamento inicial de {bloco.origem}
+                              </p>
+                              <ul className="text-xs text-[var(--kov-text-muted)] list-disc list-inside space-y-0.5">
+                                {bloco.itens.map((item, j) => (
+                                  <li key={j}>{item}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div
+                      className="my-6 h-px w-full"
+                      style={{ backgroundColor: 'var(--kov-border)', opacity: 0.6 }}
+                      aria-hidden
+                    />
                     <h3
                       className="text-2xl md:text-3xl font-serif mb-4"
-                      style={{ color: selected.corTema }}
+                      style={{ color: selected.corTema || 'var(--kov-gold)' }}
                     >
                       Sobre
                     </h3>
@@ -273,42 +478,64 @@ export default function CharacterShowcase({ characters }) {
                       </p>
                     )}
                     {selected.citacao && (
-                      <blockquote className="text-slate-300 border-l-2 pl-4 mb-4 italic" style={{ borderColor: selected.corAcento ?? selected.corTema }}>
+                      <blockquote className="text-[var(--kov-text-muted)] border-l-2 pl-4 mb-4 italic" style={{ borderColor: selected.corAcento ?? selected.corTema ?? 'var(--kov-border)' }}>
                         "{selected.citacao}"
                       </blockquote>
                     )}
-                    <p className="text-slate-300 leading-relaxed italic">
+                    <p className="leading-relaxed italic text-[var(--kov-text)]">
                       "{selected.bio}"
                     </p>
-                    {selected.personalidade?.length > 0 && (
+                    {(selected.personalidade?.length > 0 || (selected.classe?.length > 1 && selected.multiclasse !== false)) && (
                       <div className="flex flex-wrap gap-2 mt-4">
-                        {selected.personalidade.map((p) => (
+                        {selected.personalidade?.map((p) => (
                           <span
                             key={p}
-                            className="rounded border px-2.5 py-1 text-xs font-medium border-amber-400/40 bg-amber-500/10 text-amber-200"
+                            className="rounded border px-2.5 py-1 text-xs font-medium border-[var(--kov-border)] bg-[var(--kov-bg-elevated)] text-[var(--kov-gold-soft)]"
                           >
                             {p}
                           </span>
                         ))}
+                        {selected.classe?.length > (selected.multiclasseFromIndex ?? 1) && selected.multiclasse !== false && (
+                          <span className="relative group inline-block">
+                            <span className="rounded border border-violet-500/50 bg-violet-500/20 px-2.5 py-1 text-xs font-medium text-violet-200 cursor-help">
+                              (Multiclasse)
+                            </span>
+                            <div className="absolute left-0 bottom-full mb-1 hidden group-hover:block z-50 pointer-events-none">
+                              <div className="rounded-lg border border-[var(--kov-border)] bg-[var(--kov-bg-elevated)] shadow-xl p-2 min-w-[80px]">
+                                <span className="rounded border border-violet-500/50 bg-violet-500/20 px-2 py-0.5 text-xs font-medium text-violet-200 whitespace-nowrap">
+                                  {selected.multiclasseTooltip ?? selected.classe.slice(selected.multiclasseFromIndex ?? 1).join(': ')}
+                                </span>
+                              </div>
+                            </div>
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Coluna imagem / concept art */}
-                  <div className="min-h-0 flex items-center">
+                  {/* Coluna imagem / concept art (sticky: segue o scroll até o fim da seção) */}
+                  <div className="min-h-0 flex items-center sticky top-40 self-start">
                     <div className={`w-full ${conceptImages.length === 1 ? 'max-w-2xl mx-auto' : 'grid grid-cols-1 sm:grid-cols-2 gap-4'}`}>
                       {conceptImages.length > 0 ? (
                         conceptImages.map((src, i) => (
                           <div
                             key={src}
                             className="perspective-[1200px] cursor-pointer"
-                            onMouseEnter={() => isUlfgar && setUlfgarPortraitHovered(true)}
-                            onMouseLeave={() => setUlfgarPortraitHovered(false)}
-                            onClick={() => setPortraitRotateY((prev) => prev + 360)}
+                            onMouseEnter={() => setPortraitHovered(true)}
+                            onMouseLeave={() => setPortraitHovered(false)}
+                            onClick={() => {
+                              setPortraitRotateY((prev) => prev + 360)
+                              if (isUlfgar) setSnowTrigger((t) => t + 1)
+                              if (isKairos) setSandTrigger((t) => t + 1)
+                            }}
                           >
                             <motion.div
-                              className={`rounded-xl overflow-hidden bg-slate-900/95 ${conceptImages.length === 1 ? 'aspect-[3/4] max-h-[520px] w-full flex items-center justify-center' : ''}`}
-                              style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'visible' }}
+                              className={`rounded-xl overflow-hidden kov-frame ${conceptImages.length === 1 ? 'aspect-[3/4] max-h-[520px] w-full flex items-center justify-center' : ''}`}
+                              style={{
+                                backgroundColor: 'var(--kov-bg-panel)',
+                                transformStyle: 'preserve-3d',
+                                backfaceVisibility: 'visible',
+                              }}
                               initial={{ opacity: 0, scale: 0.95 }}
                               animate={{
                                 opacity: 1,
@@ -326,15 +553,21 @@ export default function CharacterShowcase({ characters }) {
                               <motion.img
                                 src={src}
                                 alt={`Concept art ${i + 1} - ${selected.nome}`}
-                                className={`rounded-xl shadow-2xl border border-white/20 w-full object-contain bg-slate-900 ${conceptImages.length === 1 ? 'aspect-[3/4] max-h-[520px]' : 'object-cover aspect-video'} ${ulfgarGlowOn ? 'ring-2 ring-[#60a5fa] shadow-[0_0_30px_#60a5fa40,0_0_60px_#60a5fa25]' : ''}`}
-                                style={{ transform: 'translateZ(0)' }}
+                                className={`rounded-xl border border-white/20 w-full object-contain ${conceptImages.length === 1 ? 'aspect-[3/4] max-h-[520px]' : 'object-cover aspect-video'} ${portraitGlowOn ? '' : 'shadow-2xl'}`}
+                                style={{
+                                  transform: 'translateZ(0)',
+                                  backgroundColor: `color-mix(in srgb, ${portraitGlowColor} 18%, #0c0b0a)`,
+                                  ...(portraitGlowOn
+                                    ? { boxShadow: `0 0 0 2px ${portraitGlowColor}, 0 0 30px ${portraitGlowColor}40, 0 0 60px ${portraitGlowColor}25` }
+                                    : {}),
+                                }}
                               />
                             </motion.div>
                           </div>
                         ))
                       ) : (
                         <div
-                          className="rounded-xl border border-white/10 bg-white/5 aspect-video flex items-center justify-center text-slate-500 text-sm"
+                          className="rounded-xl kov-frame aspect-video flex items-center justify-center text-[var(--kov-text-muted)] text-sm"
                           style={{ gridColumn: '1 / -1' }}
                         >
                           Nenhuma concept art disponível
@@ -348,6 +581,38 @@ export default function CharacterShowcase({ characters }) {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Footer */}
+      <footer
+        className="mt-auto py-4 px-4 md:px-6 text-sm border-t-2 flex flex-row items-center justify-between gap-4"
+        style={{
+          backgroundColor: 'var(--kov-bg)',
+          borderColor: 'var(--kov-border)',
+          color: 'var(--kov-text-muted)',
+        }}
+      >
+        <span className="flex-1 text-center">Acervo RPG — Biblioteca de Personagens</span>
+        <div className="relative shrink-0 flex items-center justify-end">
+          {discordCopied && (
+            <span className="absolute right-0 bottom-full mb-1 text-xs text-[var(--kov-gold)] whitespace-nowrap">
+              Nick do discord copiado com sucesso
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleCopyDiscord}
+            className="kov-footer-discord-btn p-1.5 rounded-md text-[var(--kov-text-muted)] hover:text-[var(--kov-gold)] border border-transparent hover:border-[var(--kov-border)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--kov-gold)]"
+            aria-label="Copiar usuário do Discord (astrocard)"
+            title="Copiar astrocard"
+          >
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+            </svg>
+          </button>
+        </div>
+      </footer>
+        </div>
+      )}
     </div>
   )
 }

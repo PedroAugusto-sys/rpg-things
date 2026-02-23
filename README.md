@@ -1,4 +1,4 @@
-# Crônicas de Ulfgar — Acervo RPG
+# Biblioteca de Personagens — Acervo RPG
 
 Projeto React + Vite para exibir personagens de RPG (card, detalhes, neve, efeitos).
 

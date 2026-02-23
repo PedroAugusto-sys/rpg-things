@@ -25,7 +25,7 @@ function getInitials(nome) {
 }
 
 export default function CharacterCard({ character, isActive, onSelect }) {
-  const { nome, classe, nivel, corTema, imagens } = character;
+  const { nome, classe, corTema, imagens } = character;
   const avatarSrc = imagens?.avatar;
 
   return (
@@ -77,7 +77,6 @@ export default function CharacterCard({ character, isActive, onSelect }) {
           >
             {nome}
           </span>
-          <span className="ml-2 text-sm text-[#b5bac1]">Nível {nivel}</span>
         </div>
 
         {/* Tags de classe */}

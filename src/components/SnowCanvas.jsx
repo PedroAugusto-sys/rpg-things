@@ -12,18 +12,21 @@ const FALL_SPEED_MAX = 0.8
 const OPACITY_MIN = 0.25
 const OPACITY_MAX = 0.9
 
-function createFlake(width, height, existingFlakes = []) {
+const BURST_FLAKE_COUNT = 55
+
+function createFlake(width, height, existingFlakes = [], burst = false) {
   const size = MIN_SIZE + Math.random() * (MAX_SIZE - MIN_SIZE)
   const fallSpeed = FALL_SPEED_MIN + (size / MAX_SIZE) * (FALL_SPEED_MAX - FALL_SPEED_MIN)
   const opacity = OPACITY_MIN + (size / MAX_SIZE) * (OPACITY_MAX - OPACITY_MIN)
   const phase = Math.random() * Math.PI * 2
   return {
     x: Math.random() * (width + 20) - 10,
-    y: existingFlakes.length ? Math.random() * height : Math.random() * (height + 50) - 50,
+    y: burst ? -size - Math.random() * 80 : (existingFlakes.length ? Math.random() * height : Math.random() * (height + 50) - 50),
     size,
     fallSpeed,
     opacity,
     phase,
+    burst: burst || false,
   }
 }
 
@@ -35,12 +38,29 @@ function initFlakes(width, height, count = FLAKE_COUNT) {
   return flakes
 }
 
-export default function SnowCanvas({ active = true, foreground = false, className = '' }) {
+export default function SnowCanvas({ active = true, foreground = false, trigger = 0, className = '' }) {
   const canvasRef = useRef(null)
   const flakesRef = useRef([])
   const animationRef = useRef(null)
   const dimensionsRef = useRef({ w: 0, h: 0 })
+  const lastTriggerRef = useRef(0)
   const flakeCount = foreground ? FLAKE_COUNT_FOREGROUND : FLAKE_COUNT
+
+  useEffect(() => {
+    if (!active || trigger <= 0 || trigger === lastTriggerRef.current) return
+    lastTriggerRef.current = trigger
+    const addBurst = () => {
+      const w = dimensionsRef.current.w || window.innerWidth
+      const h = dimensionsRef.current.h || window.innerHeight
+      if (w && h) {
+        for (let i = 0; i < BURST_FLAKE_COUNT; i++) {
+          flakesRef.current.push(createFlake(w, h, [], true))
+        }
+      }
+    }
+    const id = requestAnimationFrame(() => requestAnimationFrame(addBurst))
+    return () => cancelAnimationFrame(id)
+  }, [active, trigger])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -84,19 +104,23 @@ export default function SnowCanvas({ active = true, foreground = false, classNam
       ctx.clearRect(0, 0, w, h)
       time += 1
 
-      flakesRef.current.forEach((flake) => {
+      flakesRef.current = flakesRef.current.filter((flake) => {
         const sway = Math.sin(time * SWAY_FREQUENCY + flake.phase) * SWAY_AMPLITUDE * (1 + flake.size * 0.5)
         flake.x += sway
         flake.y += flake.fallSpeed
 
         if (flake.y > h + flake.size) {
+          if (flake.burst) return false
           flake.y = -flake.size
           flake.x = Math.random() * (w + 20) - 10
         }
-        if (flake.y < -flake.size) flake.y = h + flake.size
+        if (flake.y < -flake.size && !flake.burst) flake.y = h + flake.size
         if (flake.x > w + flake.size) flake.x = -flake.size
         if (flake.x < -flake.size) flake.x = w + flake.size
+        return true
+      })
 
+      flakesRef.current.forEach((flake) => {
         ctx.beginPath()
         ctx.arc(flake.x, flake.y, flake.size, 0, Math.PI * 2)
         const opacity = foreground ? flake.opacity * FOREGROUND_OPACITY : flake.opacity

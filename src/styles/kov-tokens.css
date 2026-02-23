@@ -1,0 +1,166 @@
+/**
+ * Tokens visuais inspirados no KOV GUI Kit (Knight of Valheim)
+ * Tema escuro medieval/fantasia com bordas douradas ornamentadas
+ */
+:root {
+  /* Fundos */
+  --kov-bg: #0c0b0a;
+  --kov-bg-panel: #161412;
+  --kov-bg-card: #1a1816;
+  --kov-bg-elevated: #221f1c;
+
+  /* Bordas e ornamentos (dourado/âmbar) */
+  --kov-border: #8b6914;
+  --kov-border-light: #b8860b;
+  --kov-gold: #c9a227;
+  --kov-gold-soft: #d4af37;
+  --kov-glow: rgba(201, 162, 39, 0.35);
+
+  /* Texto */
+  --kov-text: #e8e6e3;
+  --kov-text-muted: #9c9893;
+  --kov-text-dim: #6b6560;
+
+  /* Acentos (stats / estados) */
+  --kov-hp: #c0392b;
+  --kov-atk: #e74c3c;
+  --kov-def: #3498db;
+  --kov-spd: #2ecc71;
+  --kov-accent: #c9a227;
+
+  /* Barras de atributo (Sobre): degradê pergaminho/lendário */
+  --kov-stat-gradient-start: #c2410c;
+  --kov-stat-gradient-end: #eab308;
+  --kov-stat-value: #b8b4ae;
+  --kov-stat-value-bonus: var(--kov-gold);
+
+  /* Tipografia */
+  --kov-font-heading: "Cinzel", serif;
+  --kov-font-body: system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  /* Espaçamento (escala base 4px) */
+  --kov-space-1: 0.25rem;
+  --kov-space-2: 0.5rem;
+  --kov-space-3: 0.75rem;
+  --kov-space-4: 1rem;
+  --kov-space-5: 1.5rem;
+  --kov-space-6: 2rem;
+}
+
+/* Cantos ornamentados (Art Deco / geométrico) para molduras */
+.kov-frame-corner {
+  position: relative;
+}
+
+.kov-frame-corner::before,
+.kov-frame-corner::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: var(--kov-border);
+  border-style: solid;
+  border-width: 0;
+  pointer-events: none;
+}
+
+.kov-frame-corner::before {
+  top: 4px;
+  left: 4px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.kov-frame-corner::after {
+  bottom: 4px;
+  right: 4px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* Moldura estilo KOV: borda dourada; com .kov-border-svg usa Border.svg */
+.kov-frame {
+  position: relative;
+  border-radius: inherit;
+  background: var(--kov-bg-panel);
+  border: 2px solid var(--kov-border);
+  box-shadow:
+    inset 0 0 20px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(201, 162, 39, 0.2),
+    0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.kov-frame.kov-border-svg {
+  border: none;
+}
+
+.kov-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    transparent 0%,
+    rgba(201, 162, 39, 0.15) 25%,
+    rgba(201, 162, 39, 0.25) 50%,
+    rgba(201, 162, 39, 0.15) 75%,
+    transparent 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Barra de progresso estilo RPG */
+.kov-stat-bar {
+  height: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--kov-border);
+}
+
+.kov-stat-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* Moldura usando Border.svg (banner e cards) */
+.kov-border-svg {
+  background-image: url("/imagens/assets/Border.svg");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Banner de introdução: usa Border.svg */
+.kov-intro-frame {
+  border-radius: 8px;
+  background-color: var(--kov-bg-panel);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.4), 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.kov-intro-frame.kov-border-svg {
+  border: none;
+}
+
+/* Partículas douradas (embers) no fundo do banner */
+.kov-intro-particles {
+  background-image: radial-gradient(1px 1px at 20% 30%, rgba(201, 162, 39, 0.4), transparent),
+    radial-gradient(1px 1px at 40% 70%, rgba(212, 175, 55, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 60% 20%, rgba(201, 162, 39, 0.3), transparent),
+    radial-gradient(1px 1px at 80% 50%, rgba(184, 134, 11, 0.4), transparent),
+    radial-gradient(1px 1px at 10% 80%, rgba(201, 162, 39, 0.25), transparent);
+  background-size: 200% 200%;
+  animation: kov-particles-float 20s ease-in-out infinite;
+}
+
+@keyframes kov-particles-float {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
