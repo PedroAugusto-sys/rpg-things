@@ -12,7 +12,7 @@ export default function Button({
   'aria-label': ariaLabel,
 }) {
   const base =
-    'inline-flex items-center justify-center font-semibold tracking-wide transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--kov-bg)] disabled:opacity-50 disabled:pointer-events-none rounded '
+    'inline-flex items-center justify-center font-semibold tracking-wide transition-all duration-200 cursor-pointer hover:brightness-110 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--kov-bg)] disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed rounded '
   const variants = {
     primary: 'border-2 px-6 py-2.5 bg-[var(--kov-gold)] border-[var(--kov-gold)] text-[var(--kov-bg)] hover:bg-[var(--kov-gold-soft)] hover:border-[var(--kov-gold-soft)] focus-visible:ring-[var(--kov-gold)]',
     secondary:
@@ -25,7 +25,7 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`${base} ${variants[variant] || variants.secondary} ${className}`}
+      className={`kov-btn ${base} ${variants[variant] || variants.secondary} ${className}`}
       aria-label={ariaLabel}
     >
       {children}
